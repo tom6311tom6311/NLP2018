@@ -14,7 +14,7 @@
   
 * Usage  
   1. Download GloVe pre-trained word vectors from: https://nlp.stanford.edu/projects/glove/
-  2. Download Training/Testing data from hw3 slide
+  2. Download Training/Testing data from TA's slide
   3. install tensorflow 1.4 and Keras 2.1.4
   3. $> python main.py  
   
