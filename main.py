@@ -93,8 +93,9 @@ if __name__ == '__main__':
   embedded_word_list, sentiment_list, first_ids = load_data(TRAINING_DATA_PATH, glove_dict)
 
   model = Sequential()
-  model.add(Dense(64, activation='relu', input_dim=50))
-  model.add(Dense(32, activation='relu', input_dim=50))
+  model.add(Dense(128, activation='relu', input_dim=50))
+  model.add(Dense(64, activation='relu'))
+  model.add(Dense(32, activation='relu'))
   model.add(Dense(1, activation='sigmoid'))
   model.compile(optimizer='rmsprop', loss='mse')
   model.summary()
