@@ -8,6 +8,8 @@ import numpy as np
 from keras.models import Sequential
 from keras.layers import Dense, Activation
 from keras.callbacks import EarlyStopping
+import tensorflow as tf
+from keras.backend.tensorflow_backend import set_session
 
 
 OUTPUT_DIR = 'out/'
@@ -15,6 +17,12 @@ TRAINING_DATA_PATH = 'data/training_set.json'
 TESTING_DATA_PATH = 'data/test_set.json'
 GLOVE_EMBEDDER_PATH = 'data/glove.twitter.27B.50d.txt'
 REDUNDANT_WORD_THRES = 50
+
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+
+config = tf.ConfigProto()
+config.gpu_options.per_process_gpu_memory_fraction = 0.5
+set_session(tf.Session(config=config))
 
 def progress(count, total, suffix=''):
   bar_len = 60
@@ -92,7 +100,7 @@ if __name__ == '__main__':
   model.summary()
 
   print('training...')
-  model.fit(embedded_word_list, (sentiment_list+1)/2, epochs=1000, batch_size=64, callbacks=[EarlyStopping(monitor='loss', patience=3)])
+  model.fit(embedded_word_list, (sentiment_list+1)/2, epochs=1000, batch_size=64, callbacks=[EarlyStopping(monitor='loss', patience=5)])
   model.save_weights(OUTPUT_DIR + '/' + out_subdir + '/' + 'model.h5')
 
   print('loading testing data...')
