@@ -85,16 +85,14 @@ if __name__ == '__main__':
   embedded_word_list, sentiment_list, first_ids = load_data(TRAINING_DATA_PATH, glove_dict)
 
   model = Sequential()
+  model.add(Dense(64, activation='relu', input_dim=50))
   model.add(Dense(32, activation='relu', input_dim=50))
   model.add(Dense(1, activation='sigmoid'))
   model.compile(optimizer='rmsprop', loss='mse')
   model.summary()
 
-  with open(OUTPUT_DIR + '/' + out_subdir + '/' + 'report.txt','w') as fh:
-    model.summary(print_fn=lambda x: fh.write(x + '\n'))
-
   print('training...')
-  model.fit(embedded_word_list, (sentiment_list+1)/2, epochs=100, batch_size=32, callbacks=[EarlyStopping(monitor='loss', patience=3)])
+  model.fit(embedded_word_list, (sentiment_list+1)/2, epochs=1000, batch_size=64, callbacks=[EarlyStopping(monitor='loss', patience=3)])
   model.save_weights(OUTPUT_DIR + '/' + out_subdir + '/' + 'model.h5')
 
   print('loading testing data...')
@@ -108,4 +106,9 @@ if __name__ == '__main__':
     avg_sentiment_predicted = np.mean(sentiment_list_predicted[first_id_test: (first_ids_test[idx + 1] if idx < len(first_ids_test) - 1 else len(sentiment_list_predicted))])
     tse += np.square(avg_sentiment_predicted - (sentiment_list_test[first_id_test]+1)/2)
   mse = tse / len(first_ids_test)
-  print(mse)
+  print('Mean Square Error: ' + str(mse))
+
+  with open(OUTPUT_DIR + '/' + out_subdir + '/' + 'report.txt','w') as fh:
+    model.summary(print_fn=lambda x: fh.write(x + '\n'))
+    fh.write('Mean Square Error: ' + str(mse))
+    fh.close()
