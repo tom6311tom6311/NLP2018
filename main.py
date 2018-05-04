@@ -11,6 +11,7 @@ from keras.layers import Dense, Activation
 from keras.callbacks import EarlyStopping
 import tensorflow as tf
 from keras.backend.tensorflow_backend import set_session
+from sklearn.metrics import f1_score
 
 
 OUTPUT_DIR = 'out/'
@@ -18,6 +19,7 @@ TRAINING_DATA_PATH = 'data/training_set.json'
 TESTING_DATA_PATH = 'data/test_set.json'
 GLOVE_EMBEDDER_PATH = 'data/glove.twitter.27B.50d.txt'
 SENTENCE_SRC = 'snippet'
+CLASSIFICATION_THRES = 0.1
 
 os.environ["CUDA_VISIBLE_DEVICES"] = str(sys.argv[1])
 
@@ -127,17 +129,30 @@ if __name__ == '__main__':
   sentiment_list_predicted = model.predict(embedded_word_list_test)
 
   tse = 0
+  label_truth = []
+  label_predicted = []
   for idx, first_id_test in enumerate(first_ids_test):
     word_sentiments = sentiment_list_predicted[first_id_test: (first_ids_test[idx + 1] if idx < len(first_ids_test) - 1 else len(sentiment_list_predicted))]
     weights = np.array(tfidfs_test[first_id_test: (first_ids_test[idx + 1] if idx < len(first_ids_test) - 1 else len(sentiment_list_predicted))]).reshape((-1,1))
-    avg_sentiment_predicted = np.average(word_sentiments, weights=weights)
-    tse += np.square(((avg_sentiment_predicted*2)-1) - sentiment_list_test[first_id_test])
+    avg_sentiment_predicted = np.average(word_sentiments, weights=weights) * 2 - 1
+    tse += np.square(avg_sentiment_predicted - sentiment_list_test[first_id_test])
+    label_truth.append( 0 if sentiment_list_test[first_id_test] == 0 else sentiment_list_test[first_id_test] / abs(sentiment_list_test[first_id_test]))
+    label_predicted.append( 0 if abs(avg_sentiment_predicted) < CLASSIFICATION_THRES else avg_sentiment_predicted / abs(avg_sentiment_predicted))
   mse = tse / len(first_ids_test)
+  f1_macro = f1_score(label_truth, label_predicted, average='macro')
+  f1_micro = f1_score(label_truth, label_predicted, average='micro')
+  f1_weighted = f1_score(label_truth, label_predicted, average='weighted')
   print('Mean Square Error: ' + str(mse))
+  print('F1 Score (macro): ' + str(f1_macro))
+  print('F1 Score (micro): ' + str(f1_micro))
+  print('F1 Score (weighted): ' + str(f1_weighted))
 
   with open(OUTPUT_DIR + '/' + out_subdir + '/' + 'report.txt','w') as fh:
     model.summary(print_fn=lambda x: fh.write(x + '\n'))
-    fh.write('Mean Square Error: ' + str(mse))
+    fh.write('Mean Square Error: ' + str(mse) + '\n')
+    fh.write('F1 Score (macro): ' + str(f1_macro) + '\n')
+    fh.write('F1 Score (micro): ' + str(f1_micro) + '\n')
+    fh.write('F1 Score (weighted): ' + str(f1_weighted) + '\n')
     fh.close()
 
   print('#words in training set: ' + str(len(word_counts)))
