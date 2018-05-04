@@ -17,11 +17,13 @@ OUTPUT_DIR = 'out/'
 TRAINING_DATA_PATH = 'data/training_set.json'
 TESTING_DATA_PATH = 'data/test_set.json'
 GLOVE_EMBEDDER_PATH = 'data/glove.twitter.27B.50d.txt'
+SENTENCE_SRC = 'snippet'
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+os.environ["CUDA_VISIBLE_DEVICES"] = str(sys.argv[1])
+
 
 config = tf.ConfigProto()
-config.gpu_options.per_process_gpu_memory_fraction = 0.5
+config.gpu_options.per_process_gpu_memory_fraction = 0.3
 set_session(tf.Session(config=config))
 
 def progress(count, total, suffix=''):
@@ -39,10 +41,10 @@ def load_data(path, embed_dict):
   processed_word_lists = []
   print('preprocessing tweets...')
   for idx, datum in enumerate(data):
-    if (type(datum['snippet']) == list ):
-      snippet = ' '.join(datum['snippet'])
+    if (type(datum[SENTENCE_SRC]) == list ):
+      snippet = ' '.join(datum[SENTENCE_SRC])
     else:
-      snippet = datum['snippet']
+      snippet = datum[SENTENCE_SRC]
     words = [w for w in snippet.replace(',','').replace('.','').replace('?','').replace('!','').replace(':','').lower().split(' ') if w.isalpha() or '\'' in w]
     processed_word_lists.append(words)
     for w in words:
